@@ -1,0 +1,3 @@
+[submodule "assets/gitignore"]
+	path = assets/gitignore
+	url = https://github.com/github/gitignore

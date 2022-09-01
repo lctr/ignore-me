@@ -1,0 +1,16 @@
+[package]
+name = "ignore_me"
+version = "0.1.0"
+edition = "2021"
+authors = ["Lictor Guzman <lctrgzmn@gmail.com>"]
+description = "A simple commmand line application to autogenerate the necessary `.gitignore` files for a given project"
+readme = "README.md"
+license = "CC0-1.0"
+license-file = "LICENSE"
+keywords = ["gitignore", "project"]
+categories = ["command-line-utilities"]
+include = ["/src", "/assets/**"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
