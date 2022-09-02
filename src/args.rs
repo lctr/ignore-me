@@ -27,19 +27,23 @@ impl Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    /// Adds to the existing `.gitignore`
+    /// Adds to the existing `.gitignore` file the results of the
+    /// search containing the provided search terms and/or names.
     Add {
         #[clap(short, long, value_parser)]
-        keywords: Vec<String>,
-    },
-    /// Use provided keywords to determine which `.gitignore` file(s)
-    /// will be sourced
-    Keys {
+        terms: Vec<String>,
+
         #[clap(value_parser)]
-        keywords: Vec<String>,
+        names: Vec<String>,
+    },
+    /// Use provided search terms to determine which `.gitignore` file(s)
+    /// will be sourced.
+    Terms {
+        #[clap(value_parser)]
+        terms: Vec<String>,
     },
     /// Use provided names to determine which `.gitignore` file(s)
-    /// will be sourced
+    /// will be sourced.
     For {
         #[clap(value_parser)]
         names: Vec<String>,
