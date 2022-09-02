@@ -4,7 +4,7 @@ mod args;
 mod assets;
 mod data;
 mod file_gen;
-mod keyword;
+mod term;
 
 use args::{Cli, Commands};
 use assets::AssetDB;
@@ -18,11 +18,11 @@ fn main() -> std::io::Result<()> {
     }
     match cli.command() {
         Some(cmd) => match cmd {
-            Commands::Add { keywords } => {
+            Commands::Add { .. } => {
                 eprintln!("The command `add` is not yet implemented :(")
             }
-            Commands::Keys { keywords } => {
-                eprintln!("The command `keys` is not yet implemented :(")
+            Commands::Terms { .. } => {
+                eprintln!("The command `terms` is not yet implemented :(")
             }
             Commands::For { names } => handle_for(debug, names)?,
         },

@@ -89,14 +89,14 @@ pub fn lang_ext_data() -> Vec<Data<Strs, Strs>> {
     ]
 }
 
-pub const IMG_KWS: Data<Str, Strs> = Data(
+pub const IMG_TERMS: Data<Str, Strs> = Data(
     "Images",
     &[
         "img", "jpg", "jpeg", "png", "gif", "bmp", "svg", "picture", "pictures", "photo", "photos",
     ],
 );
 
-pub const JS_TS_KWS: Data<Strs, Strs> = Data(
+pub const JS_TS_TERMS: Data<Strs, Strs> = Data(
     &["Yeoman", "Node", "Vue", "VisualStudioCode"],
     &[
         "js",
@@ -112,12 +112,12 @@ pub const JS_TS_KWS: Data<Strs, Strs> = Data(
     ],
 );
 
-pub const RUST_KWS: Data<Str, Strs> = Data(
+pub const RUST_TERMS: Data<Str, Strs> = Data(
     "Rust",
     &["Cargo.toml", "rustc", "Cargo", "rs", "crate", "crates"],
 );
 
-pub const HASKELL_KWS: Data<Str, Strs> = Data(
+pub const HASKELL_TERMS: Data<Str, Strs> = Data(
     "Haskell",
     &[
         "Cabal",

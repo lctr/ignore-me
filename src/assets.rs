@@ -5,7 +5,7 @@ use std::{
 
 use crate::data::{self, Data, Str, Strs};
 
-use super::keyword::Keyword;
+use super::term::Term;
 
 const ASSETS_DIR: &'static str = "assets/gitignore";
 
@@ -38,8 +38,8 @@ impl Flag {
 pub struct AssetName(String, Flag);
 
 impl AssetName {
-    pub fn as_keyword(&self) -> Keyword {
-        Keyword::intern(&self.0)
+    pub fn as_term(&self) -> Term {
+        Term::intern(&self.0)
     }
 
     pub fn as_str(&self) -> &str {
@@ -55,32 +55,32 @@ impl<S: AsRef<str>> PartialEq<S> for AssetName {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Asset {
-    keywords: Vec<Keyword>,
+    terms: Vec<Term>,
     git_ignore: GitIgnore,
 }
 
 impl Asset {
-    pub fn keywords(&self) -> &[Keyword] {
-        &self.keywords[..]
+    pub fn terms(&self) -> &[Term] {
+        &self.terms[..]
     }
     pub fn git_ignore(&self) -> &GitIgnore {
         &self.git_ignore
     }
-    pub fn keywords_iter(&self) -> std::slice::Iter<'_, Keyword> {
-        self.keywords.iter()
+    pub fn terms_iter(&self) -> std::slice::Iter<'_, Term> {
+        self.terms.iter()
     }
-    pub fn add_keyword(&mut self, keyword: Keyword) {
-        if !self.keywords.contains(&keyword) {
-            self.keywords.push(keyword);
+    pub fn add_term(&mut self, term: Term) {
+        if !self.terms.contains(&term) {
+            self.terms.push(term);
         }
     }
-    fn add_keywords(&mut self, kws: &[Keyword]) {
-        for kw in kws {
-            self.add_keyword(*kw);
+    fn add_terms(&mut self, terms: &[Term]) {
+        for term in terms {
+            self.add_term(*term);
         }
     }
-    pub fn has_keyword(&self, keyword: &Keyword) -> bool {
-        self.keywords.contains(keyword)
+    pub fn has_term(&self, term: &Term) -> bool {
+        self.terms.contains(term)
     }
     pub fn contents(&self) -> std::io::Result<String> {
         self.git_ignore.contents()
@@ -90,7 +90,7 @@ impl Asset {
 impl std::fmt::Display for Asset {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.git_ignore())?;
-        match self.keywords() {
+        match self.terms() {
             [] => (),
             [a, bs @ ..] => {
                 write!(f, " <~ {a}")?;
@@ -141,8 +141,8 @@ pub fn is_gitignore_file(p: impl AsRef<Path>) -> bool {
 }
 
 /// Walks the static `assets` directory, collects the `.gitignore`
-/// asset file metadata (whose list of keywords contains only the
-/// keyword corresponding to the file name without the extension, but
+/// asset file metadata (whose list of terms contains only the
+/// term corresponding to the file name without the extension, but
 /// may later be populated) and returns the assets in an `AssetDB`.
 pub fn walk_assets() -> AssetDB {
     use std::fs;
@@ -164,7 +164,7 @@ pub fn walk_assets() -> AssetDB {
                         AssetName(name.trim_end_matches(".gitignore").to_string(), flag);
                     let git_ignore = GitIgnore { name, flag };
                     let asset = Asset {
-                        keywords: vec![asset_name.as_keyword()],
+                        terms: vec![asset_name.as_term()],
                         git_ignore,
                     };
                     assets.insert(asset_name, asset);
@@ -274,15 +274,15 @@ impl AssetDB {
             .flat_map(|s| self.get_by_name(s).into_iter())
     }
 
-    pub fn filter_by_keywords<'a>(
+    pub fn filter_by_terms<'a>(
         &'a self,
-        keywords: &'a [Keyword],
+        terms: &'a [Term],
     ) -> impl Iterator<Item = &'a Asset> + '_ {
         self.assets.iter().filter_map(|(asset_name, asset)| {
-            if keywords
+            if terms
                 .iter()
-                .chain(std::iter::once(&asset_name.as_keyword()))
-                .any(|keyword| asset.has_keyword(keyword))
+                .chain(std::iter::once(&asset_name.as_term()))
+                .any(|term| asset.has_term(term))
             {
                 Some(asset)
             } else {
@@ -290,15 +290,15 @@ impl AssetDB {
             }
         })
     }
-    pub fn filter_mut_by_keywords<'a>(
+    pub fn filter_mut_by_terms<'a>(
         &'a mut self,
-        keywords: &'a [Keyword],
+        terms: &'a [Term],
     ) -> impl Iterator<Item = &'a mut Asset> + '_ {
         self.assets.iter_mut().filter_map(|(asset_name, asset)| {
-            if keywords
+            if terms
                 .iter()
-                .chain(std::iter::once(&asset_name.as_keyword()))
-                .any(|keyword| asset.has_keyword(keyword))
+                .chain(std::iter::once(&asset_name.as_term()))
+                .any(|term| asset.has_term(term))
             {
                 Some(asset)
             } else {
@@ -306,14 +306,14 @@ impl AssetDB {
             }
         })
     }
-    pub fn add_keywords_for_asset_by_names<I: IntoIterator<Item = N>, N: AsRef<str>>(
+    pub fn add_terms_for_asset_by_names<I: IntoIterator<Item = N>, N: AsRef<str>>(
         &mut self,
         names: I,
-        keywords: &[Keyword],
+        terms: &[Term],
     ) {
         for name in names {
             self.filter_mut_by_name(name)
-                .for_each(|asset| asset.add_keywords(keywords))
+                .for_each(|asset| asset.add_terms(terms))
         }
     }
 }
@@ -325,28 +325,26 @@ impl<'a> AssetDecorator<'a> {
         Self(asset_db)
     }
 
-    pub fn run_with<I, N, K, S>(self, names: I, keywords: K) -> Self
+    pub fn run_with<I, N, K, S>(self, names: I, terms: K) -> Self
     where
         I: IntoIterator<Item = N>,
         N: AsRef<str>,
         K: IntoIterator<Item = S>,
         S: AsRef<str>,
     {
-        self.0.add_keywords_for_asset_by_names(
+        self.0.add_terms_for_asset_by_names(
             names,
-            Keyword::intern_iter(keywords)
-                .collect::<Vec<_>>()
-                .as_slice(),
+            Term::intern_iter(terms).collect::<Vec<_>>().as_slice(),
         );
         self
     }
-    pub fn run_with_data(self, Data(names, keywords): Data<Strs, Strs>) -> Self {
-        self.run_with(names, keywords)
+    pub fn run_with_data(self, Data(names, terms): Data<Strs, Strs>) -> Self {
+        self.run_with(names, terms)
     }
-    pub fn run_with_lang(self, Data(name, keywords): Data<Str, Strs>) -> Self {
-        self.run_with([name], keywords)
+    pub fn run_with_lang(self, Data(name, terms): Data<Str, Strs>) -> Self {
+        self.run_with([name], terms)
     }
-    pub fn filetype_keywords(self) -> Self {
+    pub fn filetype_terms(self) -> Self {
         let mut this = self;
         for dt in data::lang_ext_data() {
             this = this.run_with_data(dt)
@@ -354,11 +352,11 @@ impl<'a> AssetDecorator<'a> {
         this
     }
     pub fn decorate_all(self) -> Self {
-        self.run_with_data(data::JS_TS_KWS)
-            .run_with_lang(data::RUST_KWS)
-            .run_with_lang(data::HASKELL_KWS)
-            .run_with_lang(data::IMG_KWS)
-            .filetype_keywords()
+        self.run_with_data(data::JS_TS_TERMS)
+            .run_with_lang(data::RUST_TERMS)
+            .run_with_lang(data::HASKELL_TERMS)
+            .run_with_lang(data::IMG_TERMS)
+            .filetype_terms()
     }
 }
 
@@ -371,7 +369,7 @@ mod test {
         let assets = AssetDB::default();
         let asset_name = AssetName(String::from("Rust"), Flag::Default);
         let asset = Asset {
-            keywords: vec![Keyword::intern("Rust")],
+            terms: vec![Term::intern("Rust")],
             git_ignore: GitIgnore {
                 name: String::from("Rust.gitignore"),
                 flag: Flag::Default,
